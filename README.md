@@ -1,4 +1,4 @@
-A bee game using pygame. 
+A bee game using pygame on VSCODE. (To download pygame do pip install pygame, while making sure you already have python downloaded)
 The goal is to collect flowers to feed your beehive and see how long you can survive.
 Use WASD to move. 
 If you collide with the birds you die. 
