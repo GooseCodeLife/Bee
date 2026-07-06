@@ -10,6 +10,7 @@ Hi, in this game you are the bee, who has to collect flowers to power your beehi
 #settings
 #setup
 import pygame as pg 
+import pygame_menu as pgm
 import random
 import math 
 pg.init() 
@@ -25,10 +26,18 @@ frame = 0
 wait_time = 1
 birdcount = 1 
 num_flowers = 3 
-font = pg.font.SysFont("arial",36)
 
 screen = pg.display.set_mode((width,height))
 pg.display.set_caption('BeeGame')
+font = pg.font.SysFont("arial",36)
+#MENU VARIABLES
+starttheme = pgm.themes.THEME_BLUE.copy()
+starttheme.background_color = (0,0,0,0)
+starttheme.title = False 
+starttheme.widget_background_color = (0,0,0,0)
+starttheme.widget_font_color = (0,0,0)
+starttheme.selection_color = (0, 0, 0, 0)
+startmenu = pgm.Menu('',900,622,theme=starttheme,position=(0,0),center_content = False )
 
 #set up imgs
 def generatefilenames(name,count):
@@ -150,7 +159,7 @@ class Player(Object):
             self.game.opower_seconds = self.game.seconds
             self.game.orange_activate = True 
             self.game.opressed = True 
-            print('Orange key pressed, activate orange flower',self.max_speed)
+
             
       
         self.vel[0] = max(-self.max_speed, min(self.max_speed, self.vel[0]))
@@ -364,92 +373,94 @@ class Game:
         self.birdmin_speed = 1.5
         self.bird_death = False 
         
+        #settings
     def gameplay (self):
         while self.running:
-            if self.start_screen: 
-                self.startscreen() 
+            
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT: 
+                    pg.quit() 
+                if self.levelup:
+                    if event.type == pg.MOUSEBUTTONDOWN:
+                        if event.button == 1 or event.button == 3 :
+                                
+                            self.levelup = False 
+                            self.prev_seconds = self.seconds 
+
+            screen.fill((66, 164, 245))
+            self.seconds = (pg.time.get_ticks()//1000) - self.prev_seconds
+            if self.goldflower_spawn: 
+                Flower1.changeflower('gold',goldflower)
+            if self.blueflower_spawn:
+                Flower2.changeflower('blue',blueflower) 
+            if self.orangeflower_spawn:
+                Flower3.changeflower('orange',orangeflower)
+            if self.goldflower_collected : 
+                screen.blit(goldflowerD,(width-144,30))
+                
+            if self.blueflower_collected and not self.bpressed:
+                screen.blit(blueflowerD,(width-144,90))
+            if self.orangeflower_collected and not self.opressed:
+                screen.blit(orangeflowerD,(width-140,150))
+            if self.orange_activate:
+                countdown2 = font.render(f"Time Left: {self.orangetimer}",True,('black'))
+                screen.blit(countdown2,(width-210,200))
+                if (self.seconds-self.opower_seconds)>self.orangetimer_digit: 
+                    self.orangetimer_digit +=1 
+                    self.orangetimer -=1 
+                if (self.seconds) >= self.opower_time: 
+                    self.player.max_speed = 6.5
+                    self.player.acceleration = 0.8
+                    self.opressed = False 
+                    self.orangeflower_collected = False 
+                    self.orange_activate = False 
+                    self.orangetimer_digit = 0 
+                    self.orangetimer = 5 
+
+                
+                
+                
+            if not self.levelup: 
+                screen.blit(flower[0],(width-144,-30))
+                self.player.update(screen)
+                game.settings() 
+                for f in Flowers:
+                    f.update() 
+                    f.collide() 
+                if self.seconds >= wait_time: 
+                    for b in birds: 
+                        b.update(screen)
+                        b.bird_collide()
+                        if self.blue_activate:
+                            countdown = font.render(f"Time Left: {self.bluetimer}",True,('black'))
+                            screen.blit(countdown,(width-210,140))
+                            if (self.seconds-self.bpower_seconds)>self.bluetimer_digit: 
+                                self.bluetimer_digit +=1 
+
+                                self.bluetimer -=1 
+                            if self.seconds >= self.power_time: 
+                                self.blue_activate = False 
+                                self.bluetimer = 5 
+                                self.blueflower_collected = False 
+                                self.bpressed = False 
+                                self.bluetimer_digit = 0 
+                        else: 
+                            b.collide()
+                        
+                score_draw = font.render(f"Your current score is: {self.display_score}",True,('black'))
+                screen.blit(score_draw,(width-400,30))
             else: 
-                for event in pg.event.get():
-                    if event.type == pg.QUIT: 
-                        pg.quit() 
-                    if self.levelup:
-                        if event.type == pg.MOUSEBUTTONDOWN:
-                            if event.button == 1 or event.button == 3 : 
-                                self.levelup = False 
-                                self.prev_seconds = self.seconds 
-                    
-                screen.fill((66, 164, 245))
-                self.seconds = (pg.time.get_ticks()//1000) - self.prev_seconds
-                if self.goldflower_spawn: 
-                    Flower1.changeflower('gold',goldflower)
-                if self.blueflower_spawn:
-                    Flower2.changeflower('blue',blueflower) 
-                if self.orangeflower_spawn:
-                    Flower3.changeflower('orange',orangeflower)
-                if self.goldflower_collected : 
-                    screen.blit(goldflowerD,(width-144,30))
-                    
-                if self.blueflower_collected and not self.bpressed:
-                    screen.blit(blueflowerD,(width-144,90))
-                if self.orangeflower_collected and not self.opressed:
-                    screen.blit(orangeflowerD,(width-140,150))
-                if self.orange_activate:
-                    countdown2 = font.render(f"Time Left: {self.orangetimer}",True,('black'))
-                    screen.blit(countdown2,(width-210,200))
-                    if (self.seconds-self.opower_seconds)>self.orangetimer_digit: 
-                        self.orangetimer_digit +=1 
-                        self.orangetimer -=1 
-                    if (self.seconds) >= self.opower_time: 
-                        self.player.max_speed = 6.5
-                        self.player.acceleration = 0.8
-                        self.opressed = False 
-                        self.orangeflower_collected = False 
-                        self.orange_activate = False 
-                        self.orangetimer_digit = 0 
-                        self.orangetimer = 5 
-
-                    
-                    
-                    
-                if not self.levelup: 
-                    screen.blit(flower[0],(width-144,-30))
-                    self.player.update(screen)
-
-                    for f in Flowers:
-                        f.update() 
-                        f.collide() 
-                    if self.seconds >= wait_time: 
-                        for b in birds: 
-                            b.update(screen)
-                            b.bird_collide()
-                            if self.blue_activate:
-                                countdown = font.render(f"Time Left: {self.bluetimer}",True,('black'))
-                                screen.blit(countdown,(width-210,140))
-                                if (self.seconds-self.bpower_seconds)>self.bluetimer_digit: 
-                                    self.bluetimer_digit +=1 
-
-                                    self.bluetimer -=1 
-                                if self.seconds >= self.power_time: 
-                                    self.blue_activate = False 
-                                    self.bluetimer = 5 
-                                    self.blueflower_collected = False 
-                                    self.bpressed = False 
-                                    self.bluetimer_digit = 0 
-                            else: 
-                                b.collide()
-                            
-                    score_draw = font.render(f"Your current score is: {self.display_score}",True,('black'))
-                    screen.blit(score_draw,(width-400,30))
-                else: 
-                    self.gamelevelup()
-                #Bird1.update(screen) 
-                #Bird1.collide()
-                pg.display.update()
-                clock.tick(60)
+                self.gamelevelup()
+            #Bird1.update(screen) 
+            #Bird1.collide()
+            pg.display.update()
+            clock.tick(60)
 
 
-                if self.running == False :
-                    self.youlose()
+            if self.running == False :
+                self.youlose()
+
     def gamelevelup (self): 
         if self.seconds < self.levelup_screen_time : 
             self.frame = self.frame % len(levelup_screen)
@@ -494,26 +505,25 @@ class Game:
             pg.display.update()
 
     def startscreen (self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT: 
-                
-                pg.quit() 
-            if event.type == pg.MOUSEBUTTONDOWN: 
-                if event.button == 1 or event.button == 3: 
-                    self.start_screen = False 
-        screen.fill((66,164,245))
-        clock.tick(60)
-        start_text = font.render("Click to start",True,("black"))
-        self.frame = self.frame % len(levelup_screen)
-        bee_start = beestartscreen[int(self.frame)%len(beestartscreen)]
-        beewidth = bee_start.get_width()
-        print(450-beewidth)
-        screen.blit(bee_start,(width//2-beewidth//2,-20))
-        self.frame += 0.05       
-        
-        startwidth = start_text.get_width()  
-        screen.blit(start_text,(width//2-startwidth//2,420))
-        pg.display.update() 
+        while self.start_screen:
+            events = pg.event.get()
+
+            for event in events:
+                if event.type == pg.QUIT: 
+                    pg.quit() 
+                    return 
+
+
+            screen.fill((66,164,245))
+            bee_start = beestartscreen[int(self.frame)%len(beestartscreen)]
+            beewidth = bee_start.get_width()
+            
+            screen.blit(bee_start,(width//2-beewidth//2,-20))
+            self.frame += 0.05  
+            startmenu.update(events)
+            startmenu.draw(screen)
+            pg.display.update()
+            clock.tick(60) 
 
     def createbirdies(self):
         spawn_point = True  
@@ -566,16 +576,24 @@ class Game:
         self.player = Player([250,250],bee,self)
         game.createbirdies()
         self.running = True 
-        
-
-#starting the game
-game = Game() 
-
-
-
+    
+    def settings(self): 
+        pass 
+game = Game()     
 Flower1 = Flower([0,0],flowerbubble,game)
 Flower2 = Flower([0,0],flowerbubble,game)
 Flower3 = Flower([0,0],flowerbubble,game)
 Flowers = [Flower1,Flower2,Flower3]
+
+#starting the game
+
 game.createbirdies()
-game.gameplay()
+play_button = startmenu.add.button('Play', game.gameplay)
+settings_button = startmenu.add.button('Settings',game.settings)
+
+play_button.set_position(width//2-15,420)
+settings_button.set_position(width//2-35,465)
+
+
+game.startscreen()
+
